@@ -579,7 +579,7 @@
         <div class="mgr-badge-icon">C<span>F</span></div>
         <div class="mgr-title">
           <h1 id="mgr-main-title">কুলফিক্স ম্যানেজার</h1>
-          <small id="mgr-sub-title">১০ টেকনিশিয়ান, অর্ডার ও বিল কন্ট্রোল</small>
+          <small id="mgr-sub-title">Firebase লাইভ অর্ডার ও বিল কন্ট্রোল</small>
         </div>
       </div>
       <div class="header-actions">
@@ -627,7 +627,38 @@
   </div>
 </div>
 
+<!-- Firebase Compat SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
 <script>
+  // আপনার Firebase প্রজেক্টের আসল কনফিগ এখানে বসান
+  var firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  var fbApp = null;
+  var db = null;
+  var ordersRef = null;
+  var isFirebaseReady = false;
+
+  try {
+    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+      fbApp = firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      ordersRef = db.ref('coolfix_orders');
+      isFirebaseReady = true;
+    }
+  } catch (e) {
+    console.error("Firebase init error:", e);
+  }
+
   var STORAGE_KEY = 'coolfix_orders_v1';
   var lang = 'bn';
   var activeStatusFilter = 'All';
@@ -637,14 +668,12 @@
   var draftBillItems = [];
   var toastTimer = null;
 
-  // Alarm state (works while online/open in browser)
   var soundEnabled = true;
   var audioCtx = null;
   var alarmInterval = null;
   var knownOrderIds = [];
   var isFirstLoad = true;
 
-  // 10 Technicians list (you can customize names here anytime)
   var TECHNICIANS = [
     { id: 'Tech 1', shortBn: 'টেক ১', shortEn: 'Tech 1', bn: 'টেকনিশিয়ান ১', en: 'Technician 1' },
     { id: 'Tech 2', shortBn: 'টেক ২', shortEn: 'Tech 2', bn: 'টেকনিশিয়ান ২', en: 'Technician 2' },
@@ -673,7 +702,7 @@
   var TXT = {
     bn: {
       title: 'কুলফিক্স ম্যানেজার',
-      sub: '১০ টেকনিশিয়ান, অর্ডার ও বিল কন্ট্রোল',
+      sub: 'Firebase লাইভ অর্ডার ও বিল কন্ট্রোল',
       toggleLang: '🌐 EN',
       totalLbl: 'মোট অর্ডার',
       pendingLbl: 'পেন্ডিং / চলমান',
@@ -707,7 +736,7 @@
       billSentBadge: '✓ বিল আপডেট ও কাস্টমারে পাঠানো হয়েছে',
       totalCash: 'মোট বিল (ক্যাশ):',
       emptyTitle: 'কোনো অর্ডার পাওয়া যায়নি',
-      emptyDesc: 'কাস্টমার অ্যাপে অর্ডার করলে বা ফিল্টার বদলালে এখানে দেখা যাবে।',
+      emptyDesc: 'কাস্টমার অ্যাপে অর্ডার করলে এখানে লাইভ দেখা যাবে।',
       alarmTitle: '🚨 নতুন অর্ডার এসেছে!',
       alarmSub: 'অনলাইন অ্যালার্ম বাজছে — অর্ডারটি চেক করুন',
       stopAlarm: 'অ্যালার্ম বন্ধ',
@@ -722,7 +751,7 @@
     },
     en: {
       title: 'CoolFix Manager',
-      sub: '10 Technicians, Orders & Billing',
+      sub: 'Firebase Live Orders & Billing',
       toggleLang: '🌐 বাং',
       totalLbl: 'Total Orders',
       pendingLbl: 'Pending / Active',
@@ -756,7 +785,7 @@
       billSentBadge: '✓ Bill updated & sent to customer',
       totalCash: 'Total Bill (Cash):',
       emptyTitle: 'No orders found',
-      emptyDesc: 'Orders from the customer app will appear here.',
+      emptyDesc: 'Live orders from the customer app will appear here.',
       alarmTitle: '🚨 New Order Received!',
       alarmSub: 'Online alarm ringing — check the new order',
       stopAlarm: 'Stop Alarm',
@@ -878,7 +907,7 @@
     var hasBrandNew = false;
 
     for (var i = 0; i < orders.length; i++) {
-      var oid = orders[i].orderId;
+      var oid = orders[i].orderId || orders[i]._fbKey;
       if (oid) {
         currentIds.push(oid);
         if (!isFirstLoad && knownOrderIds.indexOf(oid) === -1 && orders[i].status === 'Pending') {
@@ -895,26 +924,75 @@
     }
   }
 
-  function saveOrders() {
+  function saveOrders(changedOrder) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
     } catch (e) {}
+
+    if (isFirebaseReady && ordersRef) {
+      if (changedOrder && changedOrder._fbKey) {
+        var copyObj = Object.assign({}, changedOrder);
+        var key = copyObj._fbKey;
+        delete copyObj._fbKey;
+        ordersRef.child(key).set(copyObj);
+      } else {
+        var mapObj = {};
+        for (var i = 0; i < orders.length; i++) {
+          var k = orders[i]._fbKey || orders[i].orderId || ('order_' + i);
+          var c = Object.assign({}, orders[i]);
+          delete c._fbKey;
+          mapObj[k] = c;
+        }
+        ordersRef.set(mapObj);
+      }
+    }
   }
 
-  function loadAndRender(showMsg, ev) {
-    if (ev) ev.stopPropagation();
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      orders = raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      orders = [];
+  function processIncomingOrdersData(rawData, showMsg) {
+    var parsedList = [];
+    if (Array.isArray(rawData)) {
+      for (var i = 0; i < rawData.length; i++) {
+        if (rawData[i]) {
+          var item = Object.assign({}, rawData[i]);
+          if (!item._fbKey) item._fbKey = item.orderId || ('idx_' + i);
+          parsedList.push(item);
+        }
+      }
+    } else if (rawData && typeof rawData === 'object') {
+      Object.keys(rawData).forEach(function(key) {
+        if (rawData[key]) {
+          var item = Object.assign({}, rawData[key]);
+          item._fbKey = key;
+          parsedList.push(item);
+        }
+      });
     }
+
+    orders = parsedList;
     detectNewOrders();
     applyHeaderText();
     renderStats();
     renderFilterRows();
     renderOrdersList();
     if (showMsg) showToast(t('toastRefreshed'));
+  }
+
+  function loadAndRender(showMsg, ev) {
+    if (ev) ev.stopPropagation();
+
+    if (isFirebaseReady && ordersRef) {
+      ordersRef.once('value', function(snapshot) {
+        processIncomingOrdersData(snapshot.val(), showMsg);
+      });
+      return;
+    }
+
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      processIncomingOrdersData(raw ? JSON.parse(raw) : [], showMsg);
+    } catch (e) {
+      processIncomingOrdersData([], showMsg);
+    }
   }
 
   function applyHeaderText() {
@@ -1122,13 +1200,14 @@
     orders[orderIdx].billSent = true;
     orders[orderIdx].billUpdatedAt = new Date().toLocaleTimeString();
 
+    var updatedOrder = orders[orderIdx];
     editingBillOrderIdx = null;
     draftBillItems = [];
 
-    saveOrders();
+    saveOrders(updatedOrder);
     renderStats();
     renderOrdersList();
-    showToast(t('toastBillSaved') + orders[orderIdx].orderId);
+    showToast(t('toastBillSaved') + updatedOrder.orderId);
   }
 
   function renderOrdersList() {
@@ -1294,7 +1373,7 @@
     } else {
       orders[idx].status = 'Accepted';
     }
-    saveOrders();
+    saveOrders(orders[idx]);
     renderStats();
     renderFilterRows();
     renderOrdersList();
@@ -1313,7 +1392,7 @@
       orders[idx].status = stVal;
     }
 
-    saveOrders();
+    saveOrders(orders[idx]);
     renderStats();
     renderFilterRows();
     renderOrdersList();
@@ -1323,7 +1402,7 @@
   function quickComplete(idx) {
     if (!orders[idx]) return;
     orders[idx].status = 'Completed';
-    saveOrders();
+    saveOrders(orders[idx]);
     renderStats();
     renderFilterRows();
     renderOrdersList();
@@ -1333,24 +1412,29 @@
   function quickCancel(idx) {
     if (!orders[idx]) return;
     orders[idx].status = 'Cancelled';
-    saveOrders();
+    saveOrders(orders[idx]);
     renderStats();
     renderFilterRows();
     renderOrdersList();
     showToast(t('toastCancelled') + orders[idx].orderId);
   }
 
-  window.addEventListener('storage', function(e) {
-    if (e.key === STORAGE_KEY) {
+  // রিয়েল-টাইম Firebase Listener
+  if (isFirebaseReady && ordersRef) {
+    ordersRef.on('value', function(snapshot) {
+      processIncomingOrdersData(snapshot.val(), false);
+    });
+  } else {
+    window.addEventListener('storage', function(e) {
+      if (e.key === STORAGE_KEY) {
+        loadAndRender(false);
+      }
+    });
+    setInterval(function() {
       loadAndRender(false);
-    }
-  });
-
-  setInterval(function() {
+    }, 3000);
     loadAndRender(false);
-  }, 3000);
-
-  loadAndRender(false);
+  }
 </script>
 </body>
 </html>
