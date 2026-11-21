@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>কুলফিক্স — ম্যানেজার প্যানেল</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --logo-deep-blue: #0038C6;
+      --logo-sky-blue: #009FFD;
+      --logo-blue-light: #E6F4FF;
+      --logo-lime-green: #58CC02;
+      --logo-green-dark: #3E9E00;
+      --logo-green-light: #EEFCE6;
+      --white: #FFFFFF;
+      --text-dark: #0A1931;
+      --text-muted: #526484;
+      --border-blue: #CBE4FF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Hind Siliguri', 'Inter', sans-serif;
+      background-color: #EBF4FC;
+      color: var(--text-dark);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      background-color: var(--white);
+      min-height: 100vh;
+      box-shadow: 0 0 24px rgba(0, 56, 198, 0.12);
+      padding-bottom: 36px;
+    }
+
+    .mgr-header {
+      background: linear-gradient(135deg, var(--logo-deep-blue), var(--logo-sky-blue));
+      color: var(--white);
+      padding: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      box-shadow: 0 4px 14px rgba(0, 56, 198, 0.2);
+    }
+
+    .mgr-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mgr-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mgr-badge-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--white);
+      color: var(--logo-deep-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .mgr-badge-icon span {
+      color: var(--logo-green-dark);
+    }
+
+    .mgr-title h1 {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .mgr-title small {
+      font-size: 11px;
+      opacity: 0.92;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .icon-pill-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      color: var(--white);
+      padding: 6px 10px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Inter', 'Hind Siliguri', sans-serif;
+    }
+
+    .icon-pill-btn.muted {
+      background: rgba(0, 0, 0, 0.25);
+      opacity: 0.85;
+    }
+
+    .refresh-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--white);
+      color: var(--logo-deep-blue);
+      border: none;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .body-wrap {
+      padding: 14px 16px;
+    }
+
+    .alarm-banner {
+      background: #FFF6E0;
+      border: 1.5px solid #F2C94C;
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alarm-banner.show {
+      display: flex;
+    }
+
+    .alarm-banner strong {
+      font-size: 13px;
+      color: #7A4F01;
+      display: block;
+    }
+
+    .alarm-banner small {
+      font-size: 11px;
+      color: #8C6214;
+    }
+
+    .stop-alarm-btn {
+      background: #CF1322;
+      color: var(--white);
+      border: none;
+      padding: 7px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-card {
+      background: var(--logo-blue-light);
+      border: 1.5px solid var(--border-blue);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat-card.green-stat {
+      background: var(--logo-green-light);
+      border-color: #B8EB96;
+    }
+
+    .stat-card small {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .stat-card strong {
+      display: block;
+      font-size: 20px;
+      font-family: 'Inter', sans-serif;
+      color: var(--logo-deep-blue);
+      margin-top: 2px;
+    }
+
+    .stat-card.green-stat strong {
+      color: var(--logo-green-dark);
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border-blue);
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--white);
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    .search-box:focus {
+      border-color: var(--logo-deep-blue);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+
+    .filter-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-pill {
+      padding: 6px 13px;
+      border-radius: 18px;
+      border: 1px solid var(--border-blue);
+      background: var(--white);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      font-family: 'Inter', 'Hind Siliguri', sans-serif;
+    }
+
+    .filter-pill.active {
+      background: var(--logo-deep-blue);
+      color: var(--white);
+      border-color: var(--logo-deep-blue);
+    }
+
+    .filter-pill.tech-pill.active {
+      background: var(--logo-green-dark);
+      border-color: var(--logo-green-dark);
+    }
+
+    .order-card {
+      background: var(--white);
+      border: 1.5px solid var(--border-blue);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 3px 10px rgba(0, 56, 198, 0.05);
+    }
+
+    .order-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      border-bottom: 1.5px dashed var(--border-blue);
+    }
+
+    .order-id {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--logo-deep-blue);
+    }
+
+    .status-tag {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .st-Pending {
+      background: var(--logo-blue-light);
+      color: var(--logo-deep-blue);
+      border: 1px solid var(--logo-sky-blue);
+    }
+
+    .st-Accepted, .st-Assigned, .st-On\ the\ way {
+      background: #FFF6E0;
+      color: #9A6700;
+      border: 1px solid #F2C94C;
+    }
+
+    .st-Completed {
+      background: var(--logo-green-light);
+      color: var(--logo-green-dark);
+      border: 1px solid var(--logo-lime-green);
+    }
+
+    .st-Cancelled {
+      background: #F4F6F9;
+      color: var(--text-muted);
+      border: 1px dashed var(--text-muted);
+    }
+
+    .assigned-tech-banner {
+      background: var(--logo-blue-light);
+      border: 1px solid var(--logo-sky-blue);
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .assigned-tech-banner.has-tech {
+      background: var(--logo-green-light);
+      border-color: var(--logo-lime-green);
+    }
+
+    .assigned-tech-banner strong {
+      color: var(--logo-deep-blue);
+    }
+
+    .assigned-tech-banner.has-tech strong {
+      color: var(--logo-green-dark);
+    }
+
+    .info-line {
+      font-size: 13px;
+      margin-bottom: 5px;
+      color: var(--text-dark);
+    }
+
+    .info-line strong {
+      color: var(--logo-deep-blue);
+    }
+
+    .items-box {
+      background: #F8FBFF;
+      border: 1px dashed var(--border-blue);
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin: 8px 0;
+      font-size: 13px;
+    }
+
+    .items-box div {
+      margin: 3px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .control-group {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-blue);
+    }
+
+    .control-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .select-box {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border-blue);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dark);
+      background: var(--white);
+      margin-bottom: 8px;
+      outline: none;
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .btn-action {
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-accept {
+      background: #0077E6;
+      color: var(--white);
+    }
+
+    .btn-assign {
+      background: var(--logo-deep-blue);
+      color: var(--white);
+    }
+
+    .btn-complete {
+      background: var(--logo-green-dark);
+      color: var(--white);
+    }
+
+    .btn-cancel {
+      background: #FFF1F0;
+      color: #CF1322;
+      border: 1px solid #FFA39E;
+    }
+
+    .btn-call {
+      background: var(--logo-blue-light);
+      color: var(--logo-deep-blue);
+      border: 1px solid var(--border-blue);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-bill-toggle {
+      width: 100%;
+      margin-top: 8px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1.5px solid var(--logo-green-dark);
+      background: var(--logo-green-light);
+      color: var(--logo-green-dark);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .bill-editor-box {
+      margin-top: 10px;
+      padding: 12px;
+      background: #F6FBF3;
+      border: 1.5px solid #B8EB96;
+      border-radius: 12px;
+    }
+
+    .bill-line-edit {
+      display: grid;
+      grid-template-columns: 1.5fr 0.7fr 0.9fr auto;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .bill-input {
+      width: 100%;
+      padding: 7px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-blue);
+      font-family: inherit;
+      font-size: 12px;
+      background: var(--white);
+      outline: none;
+    }
+
+    .bill-input.num {
+      font-family: 'Inter', sans-serif;
+      text-align: right;
+    }
+
+    .del-line-btn {
+      background: #FFF1F0;
+      color: #CF1322;
+      border: 1px solid #FFA39E;
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .add-line-btn {
+      background: var(--white);
+      color: var(--logo-deep-blue);
+      border: 1.5px dashed var(--logo-deep-blue);
+      border-radius: 9px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 8px;
+      font-family: inherit;
+    }
+
+    .bill-total-preview {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+      padding: 8px 0;
+      border-top: 1px dashed #B8EB96;
+    }
+
+    .bill-total-preview span:last-child {
+      color: var(--logo-green-dark);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+    }
+
+    .empty-box {
+      text-align: center;
+      padding: 36px 16px;
+      border: 1.5px dashed var(--border-blue);
+      border-radius: 16px;
+      background: #F9FCFF;
+      color: var(--text-muted);
+    }
+
+    .toast {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--logo-deep-blue);
+      color: var(--white);
+      padding: 10px 18px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0, 56, 198, 0.3);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body onclick="unlockAudio()">
+
+<div class="app-container">
+  <div id="toast" class="toast">বার্তা</div>
+
+  <div class="mgr-header">
+    <div class="mgr-top-row">
+      <div class="mgr-brand">
+        <div class="mgr-badge-icon">C<span>F</span></div>
+        <div class="mgr-title">
+          <h1 id="mgr-main-title">কুলফিক্স ম্যানেজার</h1>
+          <small id="mgr-sub-title">১০ টেকনিশিয়ান, অর্ডার ও বিল কন্ট্রোল</small>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-pill-btn" id="alarm-toggle-btn" onclick="toggleSoundEnabled(event)">🔔 অন</button>
+        <button class="icon-pill-btn" id="mgr-lang-btn" onclick="toggleLang(event)">🌐 EN</button>
+        <button class="refresh-btn" title="Refresh" onclick="loadAndRender(true, event)">↻</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="body-wrap">
+    <div id="alarm-banner" class="alarm-banner">
+      <div>
+        <strong id="alarm-banner-title">🚨 নতুন অর্ডার এসেছে!</strong>
+        <small id="alarm-banner-sub">অনলাইন অ্যালার্ম বাজছে — অর্ডারটি চেক করুন</small>
+      </div>
+      <button class="stop-alarm-btn" id="stop-alarm-btn" onclick="stopAlarm()">অ্যালার্ম বন্ধ</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <small id="stat-total-lbl">মোট অর্ডার</small>
+        <strong id="stat-total-val">0</strong>
+      </div>
+      <div class="stat-card">
+        <small id="stat-pending-lbl">পেন্ডিং / চলমান</small>
+        <strong id="stat-pending-val">0</strong>
+      </div>
+      <div class="stat-card green-stat">
+        <small id="stat-done-lbl">সম্পন্ন কাজ</small>
+        <strong id="stat-done-val">0</strong>
+      </div>
+      <div class="stat-card green-stat">
+        <small id="stat-rev-lbl">মোট আয় (সম্পন্ন)</small>
+        <strong id="stat-rev-val">৳0</strong>
+      </div>
+    </div>
+
+    <input type="text" id="search-input" class="search-box" placeholder="অর্ডার আইডি, নাম, ফোন বা টেকনিশিয়ান দিয়ে খুঁজুন..." onkeyup="renderOrdersList()">
+
+    <div class="filter-row" id="status-filter-row"></div>
+    <div class="filter-row" id="tech-filter-row"></div>
+
+    <div id="orders-list"></div>
+  </div>
+</div>
+
+<script>
+  var STORAGE_KEY = 'coolfix_orders_v1';
+  var lang = 'bn';
+  var activeStatusFilter = 'All';
+  var activeTechFilter = 'All';
+  var orders = [];
+  var editingBillOrderIdx = null;
+  var draftBillItems = [];
+  var toastTimer = null;
+
+  // Alarm state (works while online/open in browser)
+  var soundEnabled = true;
+  var audioCtx = null;
+  var alarmInterval = null;
+  var knownOrderIds = [];
+  var isFirstLoad = true;
+
+  // 10 Technicians list (you can customize names here anytime)
+  var TECHNICIANS = [
+    { id: 'Tech 1', shortBn: 'টেক ১', shortEn: 'Tech 1', bn: 'টেকনিশিয়ান ১', en: 'Technician 1' },
+    { id: 'Tech 2', shortBn: 'টেক ২', shortEn: 'Tech 2', bn: 'টেকনিশিয়ান ২', en: 'Technician 2' },
+    { id: 'Tech 3', shortBn: 'টেক ৩', shortEn: 'Tech 3', bn: 'টেকনিশিয়ান ৩', en: 'Technician 3' },
+    { id: 'Tech 4', shortBn: 'টেক ৪', shortEn: 'Tech 4', bn: 'টেকনিশিয়ান ৪', en: 'Technician 4' },
+    { id: 'Tech 5', shortBn: 'টেক ৫', shortEn: 'Tech 5', bn: 'টেকনিশিয়ান ৫', en: 'Technician 5' },
+    { id: 'Tech 6', shortBn: 'টেক ৬', shortEn: 'Tech 6', bn: 'টেকনিশিয়ান ৬', en: 'Technician 6' },
+    { id: 'Tech 7', shortBn: 'টেক ৭', shortEn: 'Tech 7', bn: 'টেকনিশিয়ান ৭', en: 'Technician 7' },
+    { id: 'Tech 8', shortBn: 'টেক ৮', shortEn: 'Tech 8', bn: 'টেকনিশিয়ান ৮', en: 'Technician 8' },
+    { id: 'Tech 9', shortBn: 'টেক ৯', shortEn: 'Tech 9', bn: 'টেকনিশিয়ান ৯', en: 'Technician 9' },
+    { id: 'Tech 10', shortBn: 'টেক ১০', shortEn: 'Tech 10', bn: 'টেকনিশিয়ান ১০', en: 'Technician 10' }
+  ];
+
+  var STATUS_OPTIONS = ['Pending', 'Accepted', 'Assigned', 'On the way', 'Completed', 'Cancelled'];
+
+  var DATES_I18N = {
+    bn: ['আজ', 'আগামীকাল', 'পরশু'],
+    en: ['Today', 'Tomorrow', 'Day After']
+  };
+
+  var SLOTS_I18N = {
+    bn: ['সকাল (৯টা - ১২টা)', 'দুপুর (১২টা - ৩টা)', 'বিকাল (৩টা - ৬টা)', 'সন্ধ্যা (৬টা - ৯টা)'],
+    en: ['Morning (9am - 12pm)', 'Afternoon (12pm - 3pm)', 'Evening (3pm - 6pm)', 'Night (6pm - 9pm)']
+  };
+
+  var TXT = {
+    bn: {
+      title: 'কুলফিক্স ম্যানেজার',
+      sub: '১০ টেকনিশিয়ান, অর্ডার ও বিল কন্ট্রোল',
+      toggleLang: '🌐 EN',
+      totalLbl: 'মোট অর্ডার',
+      pendingLbl: 'পেন্ডিং / চলমান',
+      doneLbl: 'সম্পন্ন কাজ',
+      revLbl: 'মোট আয় (সম্পন্ন)',
+      searchPh: 'অর্ডার আইডি, নাম, ফোন বা টেকনিশিয়ান দিয়ে খুঁজুন...',
+      allTechs: 'সব টেকনিশিয়ান',
+      unassignedFilter: 'অ্যাসাইন হয়নি',
+      assignedPrefix: 'নির্ধারিত টেকনিশিয়ান:',
+      notAssignedYet: 'এখনও টেকনিশিয়ান দেওয়া হয়নি',
+      customer: 'কাস্টমার:',
+      phone: 'ফোন:',
+      address: 'ঠিকানা:',
+      schedule: 'সময়:',
+      techLabel: 'কোন টেকনিশিয়ান এই কাজে যাবেন (বদলানো যাবে)',
+      selectTechPlaceholder: '-- টেকনিশিয়ান নির্বাচন করুন --',
+      statusLabel: 'অর্ডারের স্ট্যাটাস',
+      acceptBtn: '✓ একসেপ্ট করুন',
+      saveAssignBtn: 'টেকনিশিয়ান ও স্ট্যাটাস সেভ',
+      markDoneBtn: '✓ সম্পন্ন করুন',
+      cancelBtn: 'বাতিল',
+      callBtn: '📞 কল করুন',
+      editBillBtn: '🧾 বিল তৈরি / পরিবর্তন ও পাঠান',
+      closeBillBtn: 'বিল এডিট বন্ধ করুন',
+      billItemPh: 'কাজ / পার্টসের নাম',
+      billQtyPh: 'Qty',
+      billRatePh: 'রেট (৳)',
+      addBillLine: '+ নতুন কাজের আইটেম / পার্টস যোগ করুন',
+      billTotalLabel: 'ফাইনাল মোট বিল:',
+      submitBillBtn: 'বিল সাবমিট করুন (কাস্টমার অ্যাপে যাবে)',
+      billSentBadge: '✓ বিল আপডেট ও কাস্টমারে পাঠানো হয়েছে',
+      totalCash: 'মোট বিল (ক্যাশ):',
+      emptyTitle: 'কোনো অর্ডার পাওয়া যায়নি',
+      emptyDesc: 'কাস্টমার অ্যাপে অর্ডার করলে বা ফিল্টার বদলালে এখানে দেখা যাবে।',
+      alarmTitle: '🚨 নতুন অর্ডার এসেছে!',
+      alarmSub: 'অনলাইন অ্যালার্ম বাজছে — অর্ডারটি চেক করুন',
+      stopAlarm: 'অ্যালার্ম বন্ধ',
+      toastRefreshed: 'অর্ডার তালিকা রিফ্রেশ করা হয়েছে',
+      toastAccepted: 'অর্ডার একসেপ্ট করা হয়েছে: ',
+      toastUpdated: 'আপডেট সেভ হয়েছে: ',
+      toastCompleted: 'অর্ডার সম্পন্ন হয়েছে: ',
+      toastCancelled: 'অর্ডার বাতিল করা হয়েছে: ',
+      toastBillSaved: 'ফাইনাল বিল সাবমিট হয়েছে: ',
+      toastBillEmpty: 'অন্তত একটি কাজের আইটেম ও রেট দিন',
+      toastLang: 'ভাষা বাংলায় বদলানো হয়েছে'
+    },
+    en: {
+      title: 'CoolFix Manager',
+      sub: '10 Technicians, Orders & Billing',
+      toggleLang: '🌐 বাং',
+      totalLbl: 'Total Orders',
+      pendingLbl: 'Pending / Active',
+      doneLbl: 'Completed',
+      revLbl: 'Revenue (Done)',
+      searchPh: 'Search by Order ID, name, phone or technician...',
+      allTechs: 'All Technicians',
+      unassignedFilter: 'Unassigned',
+      assignedPrefix: 'Assigned Technician:',
+      notAssignedYet: 'No technician assigned yet',
+      customer: 'Customer:',
+      phone: 'Phone:',
+      address: 'Address:',
+      schedule: 'Schedule:',
+      techLabel: 'Assign / Change Technician for this Job',
+      selectTechPlaceholder: '-- Select Technician --',
+      statusLabel: 'Order Status',
+      acceptBtn: '✓ Accept Order',
+      saveAssignBtn: 'Save Tech & Status',
+      markDoneBtn: '✓ Complete',
+      cancelBtn: 'Cancel',
+      callBtn: '📞 Call',
+      editBillBtn: '🧾 Create / Edit & Send Bill',
+      closeBillBtn: 'Close Bill Editor',
+      billItemPh: 'Work / Part name',
+      billQtyPh: 'Qty',
+      billRatePh: 'Rate (৳)',
+      addBillLine: '+ Add Work Item / Spare Part',
+      billTotalLabel: 'Final Total Bill:',
+      submitBillBtn: 'Submit Bill (Send to Customer App)',
+      billSentBadge: '✓ Bill updated & sent to customer',
+      totalCash: 'Total Bill (Cash):',
+      emptyTitle: 'No orders found',
+      emptyDesc: 'Orders from the customer app will appear here.',
+      alarmTitle: '🚨 New Order Received!',
+      alarmSub: 'Online alarm ringing — check the new order',
+      stopAlarm: 'Stop Alarm',
+      toastRefreshed: 'Orders refreshed',
+      toastAccepted: 'Order accepted: ',
+      toastUpdated: 'Updated order: ',
+      toastCompleted: 'Marked completed: ',
+      toastCancelled: 'Order cancelled: ',
+      toastBillSaved: 'Final bill submitted: ',
+      toastBillEmpty: 'Add at least one item with rate',
+      toastLang: 'Switched to English'
+    }
+  };
+
+  function t(key) {
+    return TXT[lang][key];
+  }
+
+  function showToast(msg) {
+    var el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() {
+      el.style.display = 'none';
+    }, 2300);
+  }
+
+  function formatMoney(num) {
+    var n = Number(num) || 0;
+    var formatted = n.toLocaleString('en-US', {
+      minimumFractionDigits: (n % 1 === 0) ? 0 : 2,
+      maximumFractionDigits: 2
+    });
+    return '৳' + formatted;
+  }
+
+  function unlockAudio() {
+    try {
+      if (!audioCtx) {
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    } catch (e) {}
+  }
+
+  function playBeepPattern() {
+    if (!soundEnabled) return;
+    unlockAudio();
+    if (!audioCtx) return;
+    try {
+      var now = audioCtx.currentTime;
+      var notes = [880, 1174.66, 880, 1174.66];
+      for (var i = 0; i < notes.length; i++) {
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(notes[i], now + i * 0.16);
+        gain.gain.setValueAtTime(0.001, now + i * 0.16);
+        gain.gain.exponentialRampToValueAtTime(0.22, now + i * 0.16 + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.16 + 0.14);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.16);
+        osc.stop(now + i * 0.16 + 0.15);
+      }
+    } catch (e) {}
+  }
+
+  function triggerOrderAlarm() {
+    document.getElementById('alarm-banner').classList.add('show');
+    playBeepPattern();
+    if (alarmInterval) clearInterval(alarmInterval);
+    alarmInterval = setInterval(function() {
+      playBeepPattern();
+    }, 2400);
+  }
+
+  function stopAlarm() {
+    document.getElementById('alarm-banner').classList.remove('show');
+    if (alarmInterval) {
+      clearInterval(alarmInterval);
+      alarmInterval = null;
+    }
+  }
+
+  function toggleSoundEnabled(ev) {
+    if (ev) ev.stopPropagation();
+    unlockAudio();
+    soundEnabled = !soundEnabled;
+    updateAlarmButton();
+    if (!soundEnabled) {
+      stopAlarm();
+      showToast(lang === 'bn' ? 'অ্যালার্ম সাউন্ড মিউট করা হয়েছে' : 'Alarm sound muted');
+    } else {
+      playBeepPattern();
+      showToast(lang === 'bn' ? 'অ্যালার্ম সাউন্ড চালু করা হয়েছে' : 'Alarm sound enabled');
+    }
+  }
+
+  function updateAlarmButton() {
+    var btn = document.getElementById('alarm-toggle-btn');
+    if (!btn) return;
+    if (soundEnabled) {
+      btn.textContent = (lang === 'bn') ? '🔔 অন' : '🔔 ON';
+      btn.classList.remove('muted');
+    } else {
+      btn.textContent = (lang === 'bn') ? '🔕 অফ' : '🔕 OFF';
+      btn.classList.add('muted');
+    }
+  }
+
+  function detectNewOrders() {
+    var currentIds = [];
+    var hasBrandNew = false;
+
+    for (var i = 0; i < orders.length; i++) {
+      var oid = orders[i].orderId;
+      if (oid) {
+        currentIds.push(oid);
+        if (!isFirstLoad && knownOrderIds.indexOf(oid) === -1 && orders[i].status === 'Pending') {
+          hasBrandNew = true;
+        }
+      }
+    }
+
+    knownOrderIds = currentIds;
+    isFirstLoad = false;
+
+    if (hasBrandNew) {
+      triggerOrderAlarm();
+    }
+  }
+
+  function saveOrders() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+    } catch (e) {}
+  }
+
+  function loadAndRender(showMsg, ev) {
+    if (ev) ev.stopPropagation();
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      orders = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      orders = [];
+    }
+    detectNewOrders();
+    applyHeaderText();
+    renderStats();
+    renderFilterRows();
+    renderOrdersList();
+    if (showMsg) showToast(t('toastRefreshed'));
+  }
+
+  function applyHeaderText() {
+    document.getElementById('mgr-main-title').textContent = t('title');
+    document.getElementById('mgr-sub-title').textContent = t('sub');
+    document.getElementById('mgr-lang-btn').textContent = t('toggleLang');
+    document.getElementById('stat-total-lbl').textContent = t('totalLbl');
+    document.getElementById('stat-pending-lbl').textContent = t('pendingLbl');
+    document.getElementById('stat-done-lbl').textContent = t('doneLbl');
+    document.getElementById('stat-rev-lbl').textContent = t('revLbl');
+    document.getElementById('search-input').placeholder = t('searchPh');
+    document.getElementById('alarm-banner-title').textContent = t('alarmTitle');
+    document.getElementById('alarm-banner-sub').textContent = t('alarmSub');
+    document.getElementById('stop-alarm-btn').textContent = t('stopAlarm');
+    updateAlarmButton();
+  }
+
+  function toggleLang(ev) {
+    if (ev) ev.stopPropagation();
+    lang = (lang === 'bn') ? 'en' : 'bn';
+    applyHeaderText();
+    renderStats();
+    renderFilterRows();
+    renderOrdersList();
+    showToast(t('toastLang'));
+  }
+
+  function renderStats() {
+    var total = orders.length;
+    var active = 0;
+    var done = 0;
+    var revenue = 0;
+
+    for (var i = 0; i < orders.length; i++) {
+      var st = orders[i].status;
+      if (st === 'Completed') {
+        done++;
+        revenue += (Number(orders[i].total) || 0);
+      } else if (st !== 'Cancelled') {
+        active++;
+      }
+    }
+
+    document.getElementById('stat-total-val').textContent = total;
+    document.getElementById('stat-pending-val').textContent = active;
+    document.getElementById('stat-done-val').textContent = done;
+    document.getElementById('stat-rev-val').textContent = formatMoney(revenue);
+  }
+
+  function countOrdersForTech(techId) {
+    var cnt = 0;
+    for (var i = 0; i < orders.length; i++) {
+      if (orders[i].assignedTech === techId) cnt++;
+    }
+    return cnt;
+  }
+
+  function renderFilterRows() {
+    var stKeys = ['All', 'Pending', 'Accepted', 'Assigned', 'On the way', 'Completed', 'Cancelled'];
+    var stHtml = '';
+    for (var i = 0; i < stKeys.length; i++) {
+      var k = stKeys[i];
+      var cls = (activeStatusFilter === k) ? 'filter-pill active' : 'filter-pill';
+      stHtml += '<button class="' + cls + '" onclick="setStatusFilter(\'' + k + '\')">' + k + '</button>';
+    }
+    document.getElementById('status-filter-row').innerHTML = stHtml;
+
+    var techHtml = '<button class="filter-pill tech-pill' + (activeTechFilter === 'All' ? ' active' : '') + '" onclick="setTechFilter(\'All\')">' + t('allTechs') + '</button>';
+    techHtml += '<button class="filter-pill tech-pill' + (activeTechFilter === 'Unassigned' ? ' active' : '') + '" onclick="setTechFilter(\'Unassigned\')">' + t('unassignedFilter') + '</button>';
+
+    for (var j = 0; j < TECHNICIANS.length; j++) {
+      var tch = TECHNICIANS[j];
+      var cNum = countOrdersForTech(tch.id);
+      var shortLbl = (lang === 'bn') ? tch.shortBn : tch.shortEn;
+      var tCls = (activeTechFilter === tch.id) ? 'filter-pill tech-pill active' : 'filter-pill tech-pill';
+      techHtml += '<button class="' + tCls + '" onclick="setTechFilter(\'' + tch.id + '\')">' + shortLbl + ' (' + cNum + ')</button>';
+    }
+    document.getElementById('tech-filter-row').innerHTML = techHtml;
+  }
+
+  function setStatusFilter(fKey) {
+    activeStatusFilter = fKey;
+    renderFilterRows();
+    renderOrdersList();
+  }
+
+  function setTechFilter(tKey) {
+    activeTechFilter = tKey;
+    renderFilterRows();
+    renderOrdersList();
+  }
+
+  function getItemTitle(item) {
+    if (item.customLabel) return item.customLabel;
+    if (lang === 'bn') return item.nameBn || item.nameEn || 'Service';
+    return item.nameEn || item.nameBn || 'Service';
+  }
+
+  function getTechDisplay(techId) {
+    if (!techId) return t('notAssignedYet');
+    for (var i = 0; i < TECHNICIANS.length; i++) {
+      if (TECHNICIANS[i].id === techId) {
+        return (lang === 'bn') ? TECHNICIANS[i].bn : TECHNICIANS[i].en;
+      }
+    }
+    return techId;
+  }
+
+  function openBillEditor(orderIdx) {
+    if (!orders[orderIdx]) return;
+    if (editingBillOrderIdx === orderIdx) {
+      editingBillOrderIdx = null;
+      draftBillItems = [];
+      renderOrdersList();
+      return;
+    }
+
+    editingBillOrderIdx = orderIdx;
+    var sourceList = (orders[orderIdx].billItems && orders[orderIdx].billItems.length > 0)
+      ? orders[orderIdx].billItems
+      : (orders[orderIdx].items || []);
+
+    draftBillItems = [];
+    for (var i = 0; i < sourceList.length; i++) {
+      var it = sourceList[i];
+      draftBillItems.push({
+        label: it.customLabel || (lang === 'bn' ? (it.nameBn || it.nameEn) : (it.nameEn || it.nameBn)) || '',
+        qty: Number(it.qty) || 1,
+        price: Number(it.price) || 0
+      });
+    }
+    if (draftBillItems.length === 0) {
+      draftBillItems.push({ label: '', qty: 1, price: 0 });
+    }
+    renderOrdersList();
+  }
+
+  function syncDraftFromDom() {
+    for (var i = 0; i < draftBillItems.length; i++) {
+      var lblEl = document.getElementById('bill-lbl-' + i);
+      var qtyEl = document.getElementById('bill-qty-' + i);
+      var prcEl = document.getElementById('bill-prc-' + i);
+      if (lblEl) draftBillItems[i].label = lblEl.value;
+      if (qtyEl) draftBillItems[i].qty = Math.max(1, parseInt(qtyEl.value, 10) || 1);
+      if (prcEl) draftBillItems[i].price = Math.max(0, parseFloat(prcEl.value) || 0);
+    }
+  }
+
+  function updateDraftTotalPreview() {
+    syncDraftFromDom();
+    var sum = 0;
+    for (var i = 0; i < draftBillItems.length; i++) {
+      sum += (draftBillItems[i].qty || 1) * (Number(draftBillItems[i].price) || 0);
+    }
+    var prevEl = document.getElementById('draft-total-val');
+    if (prevEl) prevEl.textContent = formatMoney(sum);
+  }
+
+  function addDraftLine() {
+    syncDraftFromDom();
+    draftBillItems.push({ label: '', qty: 1, price: 0 });
+    renderOrdersList();
+  }
+
+  function removeDraftLine(lineIdx) {
+    syncDraftFromDom();
+    draftBillItems.splice(lineIdx, 1);
+    if (draftBillItems.length === 0) {
+      draftBillItems.push({ label: '', qty: 1, price: 0 });
+    }
+    renderOrdersList();
+  }
+
+  function submitCustomBill(orderIdx) {
+    syncDraftFromDom();
+    var validLines = [];
+    var totalBill = 0;
+
+    for (var i = 0; i < draftBillItems.length; i++) {
+      var line = draftBillItems[i];
+      var cleanLbl = (line.label || '').trim();
+      var rate = Number(line.price) || 0;
+      var q = Math.max(1, parseInt(line.qty, 10) || 1);
+      if (cleanLbl || rate > 0) {
+        var finalLbl = cleanLbl || ((lang === 'bn') ? 'সার্ভিস / পার্টস' : 'Service / Part');
+        validLines.push({
+          customLabel: finalLbl,
+          nameBn: finalLbl,
+          nameEn: finalLbl,
+          qty: q,
+          price: rate
+        });
+        totalBill += q * rate;
+      }
+    }
+
+    if (validLines.length === 0) {
+      showToast(t('toastBillEmpty'));
+      return;
+    }
+
+    orders[orderIdx].billItems = validLines;
+    orders[orderIdx].items = validLines;
+    orders[orderIdx].total = totalBill;
+    orders[orderIdx].billSent = true;
+    orders[orderIdx].billUpdatedAt = new Date().toLocaleTimeString();
+
+    editingBillOrderIdx = null;
+    draftBillItems = [];
+
+    saveOrders();
+    renderStats();
+    renderOrdersList();
+    showToast(t('toastBillSaved') + orders[orderIdx].orderId);
+  }
+
+  function renderOrdersList() {
+    var q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+    var filtered = [];
+
+    for (var i = 0; i < orders.length; i++) {
+      var o = orders[i];
+      if (activeStatusFilter !== 'All' && o.status !== activeStatusFilter) continue;
+
+      if (activeTechFilter === 'Unassigned' && o.assignedTech) continue;
+      if (activeTechFilter !== 'All' && activeTechFilter !== 'Unassigned' && o.assignedTech !== activeTechFilter) continue;
+
+      var addr = o.address || {};
+      var hay = [
+        o.orderId || '',
+        addr.name || '',
+        addr.phone || '',
+        addr.fullAddress || '',
+        o.assignedTech || '',
+        getTechDisplay(o.assignedTech || '')
+      ].join(' ').toLowerCase();
+
+      if (q && hay.indexOf(q) === -1) continue;
+      filtered.push({ order: o, realIndex: i });
+    }
+
+    var listEl = document.getElementById('orders-list');
+    if (filtered.length === 0) {
+      listEl.innerHTML =
+        '<div class="empty-box">' +
+          '<div style="font-size:40px; margin-bottom:8px;">📭</div>' +
+          '<h3 style="color:var(--logo-deep-blue); margin-bottom:4px;">' + t('emptyTitle') + '</h3>' +
+          '<p style="font-size:13px;">' + t('emptyDesc') + '</p>' +
+        '</div>';
+      return;
+    }
+
+    var html = '';
+    for (var f = 0; f < filtered.length; f++) {
+      var o = filtered[f].order;
+      var idx = filtered[f].realIndex;
+      var addr = o.address || {};
+      var dStr = (DATES_I18N[lang] && DATES_I18N[lang][o.dateIdx]) ? DATES_I18N[lang][o.dateIdx] : '';
+      var sStr = (SLOTS_I18N[lang] && SLOTS_I18N[lang][o.slotIdx]) ? SLOTS_I18N[lang][o.slotIdx] : '';
+
+      var itemsHtml = '';
+      var oItems = o.items || [];
+      for (var j = 0; j < oItems.length; j++) {
+        var it = oItems[j];
+        var unitRate = Number(it.price) || 0;
+        var itemQty = Number(it.qty) || 1;
+        itemsHtml +=
+          '<div>' +
+            '<span>• ' + getItemTitle(it) + ' (' + formatMoney(unitRate) + ' × ' + itemQty + ')</span>' +
+            '<strong style="color:var(--logo-green-dark); font-family:\'Inter\',sans-serif;">' + formatMoney(unitRate * itemQty) + '</strong>' +
+          '</div>';
+      }
+
+      var techOptsHtml = '<option value="">' + t('selectTechPlaceholder') + '</option>';
+      for (var k = 0; k < TECHNICIANS.length; k++) {
+        var tch = TECHNICIANS[k];
+        var sel = (o.assignedTech === tch.id) ? ' selected' : '';
+        var lbl = (lang === 'bn') ? tch.bn : tch.en;
+        techOptsHtml += '<option value="' + tch.id + '"' + sel + '>' + lbl + '</option>';
+      }
+
+      var stOptsHtml = '';
+      for (var m = 0; m < STATUS_OPTIONS.length; m++) {
+        var stVal = STATUS_OPTIONS[m];
+        var sSel = (o.status === stVal) ? ' selected' : '';
+        stOptsHtml += '<option value="' + stVal + '"' + sSel + '>' + stVal + '</option>';
+      }
+
+      var badgeCls = 'status-tag st-' + (o.status || 'Pending');
+      var hasTech = Boolean(o.assignedTech);
+      var techBannerCls = hasTech ? 'assigned-tech-banner has-tech' : 'assigned-tech-banner';
+      var isEditingThis = (editingBillOrderIdx === idx);
+
+      var billEditorHtml = '';
+      if (isEditingThis) {
+        var rowsHtml = '';
+        var runningSum = 0;
+        for (var r = 0; r < draftBillItems.length; r++) {
+          var dl = draftBillItems[r];
+          runningSum += (Number(dl.qty) || 1) * (Number(dl.price) || 0);
+          rowsHtml +=
+            '<div class="bill-line-edit">' +
+              '<input type="text" id="bill-lbl-' + r + '" class="bill-input" placeholder="' + t('billItemPh') + '" value="' + (dl.label || '').replace(/"/g, '&quot;') + '" oninput="updateDraftTotalPreview()">' +
+              '<input type="number" min="1" id="bill-qty-' + r + '" class="bill-input num" placeholder="' + t('billQtyPh') + '" value="' + (dl.qty || 1) + '" oninput="updateDraftTotalPreview()">' +
+              '<input type="number" min="0" step="any" id="bill-prc-' + r + '" class="bill-input num" placeholder="' + t('billRatePh') + '" value="' + (dl.price || 0) + '" oninput="updateDraftTotalPreview()">' +
+              '<button type="button" class="del-line-btn" onclick="removeDraftLine(' + r + ')">✕</button>' +
+            '</div>';
+        }
+
+        billEditorHtml =
+          '<div class="bill-editor-box">' +
+            rowsHtml +
+            '<button type="button" class="add-line-btn" onclick="addDraftLine()">' + t('addBillLine') + '</button>' +
+            '<div class="bill-total-preview">' +
+              '<span>' + t('billTotalLabel') + '</span>' +
+              '<span id="draft-total-val">' + formatMoney(runningSum) + '</span>' +
+            '</div>' +
+            '<button type="button" class="btn-action btn-complete" style="width:100%; margin-top:6px;" onclick="submitCustomBill(' + idx + ')">' + t('submitBillBtn') + '</button>' +
+          '</div>';
+      }
+
+      var billSentNote = o.billSent
+        ? '<div style="font-size:11px; color:var(--logo-green-dark); font-weight:700; margin-top:5px;">' + t('billSentBadge') + '</div>'
+        : '';
+
+      html +=
+        '<div class="order-card">' +
+          '<div class="order-head">' +
+            '<div>' +
+              '<div class="order-id">' + (o.orderId || '') + '</div>' +
+              '<small style="color:var(--text-muted); font-size:12px;">' + t('schedule') + ' ' + dStr + ' · ' + sStr + '</small>' +
+            '</div>' +
+            '<span class="' + badgeCls + '">' + (o.status || 'Pending') + '</span>' +
+          '</div>' +
+          '<div class="' + techBannerCls + '">' +
+            '<span>👷 ' + t('assignedPrefix') + ' <strong>' + getTechDisplay(o.assignedTech) + '</strong></span>' +
+          '</div>' +
+          '<div class="info-line"><strong>' + t('customer') + '</strong> ' + (addr.name || '-') + '</div>' +
+          '<div class="info-line"><strong>' + t('phone') + '</strong> <span style="font-family:\'Inter\',sans-serif;">' + (addr.phone || '-') + '</span></div>' +
+          '<div class="info-line"><strong>' + t('address') + '</strong> ' + (addr.fullAddress || '-') + (addr.landmark ? ' (' + addr.landmark + ')' : '') + '</div>' +
+          '<div class="items-box">' + itemsHtml + '</div>' +
+          '<div class="info-line" style="display:flex; justify-content:space-between; font-weight:700;">' +
+            '<span>' + t('totalCash') + '</span>' +
+            '<span style="color:var(--logo-green-dark); font-family:\'Inter\',sans-serif; font-size:15px;">' + formatMoney(o.total) + '</span>' +
+          '</div>' +
+          '<button type="button" class="btn-bill-toggle" onclick="openBillEditor(' + idx + ')">' +
+            (isEditingThis ? t('closeBillBtn') : t('editBillBtn')) +
+          '</button>' +
+          billSentNote +
+          billEditorHtml +
+          '<div class="control-group">' +
+            '<label class="control-label">' + t('techLabel') + '</label>' +
+            '<select id="tech-sel-' + idx + '" class="select-box">' + techOptsHtml + '</select>' +
+            '<label class="control-label">' + t('statusLabel') + '</label>' +
+            '<select id="status-sel-' + idx + '" class="select-box">' + stOptsHtml + '</select>' +
+            '<div class="btn-row">' +
+              '<button class="btn-action btn-accept" onclick="acceptOrder(' + idx + ')">' + t('acceptBtn') + '</button>' +
+              '<button class="btn-action btn-assign" onclick="saveOrderChange(' + idx + ')">' + t('saveAssignBtn') + '</button>' +
+              '<button class="btn-action btn-complete" onclick="quickComplete(' + idx + ')">' + t('markDoneBtn') + '</button>' +
+              '<button class="btn-action btn-cancel" onclick="quickCancel(' + idx + ')">' + t('cancelBtn') + '</button>' +
+            '</div>' +
+            '<a class="btn-action btn-call" style="width:100%; margin-top:8px;" href="tel:' + (addr.phone || '') + '">' + t('callBtn') + '</a>' +
+          '</div>' +
+        '</div>';
+    }
+
+    listEl.innerHTML = html;
+  }
+
+  function acceptOrder(idx) {
+    if (!orders[idx]) return;
+    var techSel = document.getElementById('tech-sel-' + idx);
+    var techVal = techSel ? techSel.value : (orders[idx].assignedTech || '');
+    if (techVal) {
+      orders[idx].assignedTech = techVal;
+      orders[idx].status = 'Assigned';
+    } else {
+      orders[idx].status = 'Accepted';
+    }
+    saveOrders();
+    renderStats();
+    renderFilterRows();
+    renderOrdersList();
+    showToast(t('toastAccepted') + orders[idx].orderId);
+  }
+
+  function saveOrderChange(idx) {
+    if (!orders[idx]) return;
+    var techVal = document.getElementById('tech-sel-' + idx).value;
+    var stVal = document.getElementById('status-sel-' + idx).value;
+
+    orders[idx].assignedTech = techVal;
+    if (techVal && stVal === 'Pending') {
+      orders[idx].status = 'Assigned';
+    } else {
+      orders[idx].status = stVal;
+    }
+
+    saveOrders();
+    renderStats();
+    renderFilterRows();
+    renderOrdersList();
+    showToast(t('toastUpdated') + orders[idx].orderId);
+  }
+
+  function quickComplete(idx) {
+    if (!orders[idx]) return;
+    orders[idx].status = 'Completed';
+    saveOrders();
+    renderStats();
+    renderFilterRows();
+    renderOrdersList();
+    showToast(t('toastCompleted') + orders[idx].orderId);
+  }
+
+  function quickCancel(idx) {
+    if (!orders[idx]) return;
+    orders[idx].status = 'Cancelled';
+    saveOrders();
+    renderStats();
+    renderFilterRows();
+    renderOrdersList();
+    showToast(t('toastCancelled') + orders[idx].orderId);
+  }
+
+  window.addEventListener('storage', function(e) {
+    if (e.key === STORAGE_KEY) {
+      loadAndRender(false);
+    }
+  });
+
+  setInterval(function() {
+    loadAndRender(false);
+  }, 3000);
+
+  loadAndRender(false);
+</script>
+</body>
+</html>
