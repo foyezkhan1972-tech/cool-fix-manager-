@@ -579,13 +579,13 @@
         <div class="mgr-badge-icon">C<span>F</span></div>
         <div class="mgr-title">
           <h1 id="mgr-main-title">কুলফিক্স ম্যানেজার</h1>
-          <small id="mgr-sub-title">Firebase লাইভ অর্ডার ও বিল কন্ট্রোল</small>
+          <small id="mgr-sub-title">১০ টেকনিশিয়ান, অর্ডার ও বিল কন্ট্রোল</small>
         </div>
       </div>
       <div class="header-actions">
         <button class="icon-pill-btn" id="alarm-toggle-btn" onclick="toggleSoundEnabled(event)">🔔 অন</button>
         <button class="icon-pill-btn" id="mgr-lang-btn" onclick="toggleLang(event)">🌐 EN</button>
-        <button class="refresh-btn" title="Refresh" onclick="loadAndRender(true, event)">↻</button>
+        <button class="refresh-btn" title="Refresh" onclick="manualRefresh(event)">↻</button>
       </div>
     </div>
   </div>
@@ -627,39 +627,32 @@
   </div>
 </div>
 
-<!-- Firebase Compat SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    doc,
+    onSnapshot,
+    updateDoc,
+    query,
+    orderBy
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<script>
-  // আপনার Firebase প্রজেক্টের আসল কনফিগ এখানে বসান
-  var firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  const firebaseConfig = {
+    apiKey: "AIzaSyBOhXKY60-A8_LTl52VRODRLNuiSXWYoAQ",
+    authDomain: "cool-fix-8cc00.firebaseapp.com",
+    projectId: "cool-fix-8cc00",
+    storageBucket: "cool-fix-8cc00.firebasestorage.app",
+    messagingSenderId: "1080573194990",
+    appId: "1:1080573194990:web:5853abe6cdcf84ec0ab9ff",
+    measurementId: "G-039C6BGX1Q"
   };
 
-  var fbApp = null;
-  var db = null;
-  var ordersRef = null;
-  var isFirebaseReady = false;
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const ORDERS_COLLECTION = "orders";
 
-  try {
-    if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
-      fbApp = firebase.initializeApp(firebaseConfig);
-      db = firebase.database();
-      ordersRef = db.ref('coolfix_orders');
-      isFirebaseReady = true;
-    }
-  } catch (e) {
-    console.error("Firebase init error:", e);
-  }
-
-  var STORAGE_KEY = 'coolfix_orders_v1';
   var lang = 'bn';
   var activeStatusFilter = 'All';
   var activeTechFilter = 'All';
@@ -702,7 +695,7 @@
   var TXT = {
     bn: {
       title: 'কুলফিক্স ম্যানেজার',
-      sub: 'Firebase লাইভ অর্ডার ও বিল কন্ট্রোল',
+      sub: '১০ টেকনিশিয়ান, অর্ডার ও বিল কন্ট্রোল',
       toggleLang: '🌐 EN',
       totalLbl: 'মোট অর্ডার',
       pendingLbl: 'পেন্ডিং / চলমান',
@@ -736,22 +729,23 @@
       billSentBadge: '✓ বিল আপডেট ও কাস্টমারে পাঠানো হয়েছে',
       totalCash: 'মোট বিল (ক্যাশ):',
       emptyTitle: 'কোনো অর্ডার পাওয়া যায়নি',
-      emptyDesc: 'কাস্টমার অ্যাপে অর্ডার করলে এখানে লাইভ দেখা যাবে।',
+      emptyDesc: 'কাস্টমার অ্যাপে অর্ডার করলে বা ফিল্টার বদলালে এখানে দেখা যাবে।',
       alarmTitle: '🚨 নতুন অর্ডার এসেছে!',
       alarmSub: 'অনলাইন অ্যালার্ম বাজছে — অর্ডারটি চেক করুন',
       stopAlarm: 'অ্যালার্ম বন্ধ',
-      toastRefreshed: 'অর্ডার তালিকা রিফ্রেশ করা হয়েছে',
+      toastRefreshed: 'লাইভ ডেটা আপডেট করা হয়েছে',
       toastAccepted: 'অর্ডার একসেপ্ট করা হয়েছে: ',
       toastUpdated: 'আপডেট সেভ হয়েছে: ',
       toastCompleted: 'অর্ডার সম্পন্ন হয়েছে: ',
       toastCancelled: 'অর্ডার বাতিল করা হয়েছে: ',
       toastBillSaved: 'ফাইনাল বিল সাবমিট হয়েছে: ',
       toastBillEmpty: 'অন্তত একটি কাজের আইটেম ও রেট দিন',
-      toastLang: 'ভাষা বাংলায় বদলানো হয়েছে'
+      toastLang: 'ভাষা বাংলায় বদলানো হয়েছে',
+      toastSaveErr: 'সার্ভারে সেভ করতে সমস্যা হয়েছে'
     },
     en: {
       title: 'CoolFix Manager',
-      sub: 'Firebase Live Orders & Billing',
+      sub: '10 Technicians, Orders & Billing',
       toggleLang: '🌐 বাং',
       totalLbl: 'Total Orders',
       pendingLbl: 'Pending / Active',
@@ -785,18 +779,19 @@
       billSentBadge: '✓ Bill updated & sent to customer',
       totalCash: 'Total Bill (Cash):',
       emptyTitle: 'No orders found',
-      emptyDesc: 'Live orders from the customer app will appear here.',
+      emptyDesc: 'Orders from the customer app will appear here.',
       alarmTitle: '🚨 New Order Received!',
       alarmSub: 'Online alarm ringing — check the new order',
       stopAlarm: 'Stop Alarm',
-      toastRefreshed: 'Orders refreshed',
+      toastRefreshed: 'Live orders synced',
       toastAccepted: 'Order accepted: ',
       toastUpdated: 'Updated order: ',
       toastCompleted: 'Marked completed: ',
       toastCancelled: 'Order cancelled: ',
       toastBillSaved: 'Final bill submitted: ',
       toastBillEmpty: 'Add at least one item with rate',
-      toastLang: 'Switched to English'
+      toastLang: 'Switched to English',
+      toastSaveErr: 'Failed to sync with server'
     }
   };
 
@@ -824,7 +819,7 @@
     return '৳' + formatted;
   }
 
-  function unlockAudio() {
+  window.unlockAudio = function() {
     try {
       if (!audioCtx) {
         var Ctx = window.AudioContext || window.webkitAudioContext;
@@ -834,11 +829,11 @@
         audioCtx.resume();
       }
     } catch (e) {}
-  }
+  };
 
   function playBeepPattern() {
     if (!soundEnabled) return;
-    unlockAudio();
+    window.unlockAudio();
     if (!audioCtx) return;
     try {
       var now = audioCtx.currentTime;
@@ -868,27 +863,27 @@
     }, 2400);
   }
 
-  function stopAlarm() {
+  window.stopAlarm = function() {
     document.getElementById('alarm-banner').classList.remove('show');
     if (alarmInterval) {
       clearInterval(alarmInterval);
       alarmInterval = null;
     }
-  }
+  };
 
-  function toggleSoundEnabled(ev) {
+  window.toggleSoundEnabled = function(ev) {
     if (ev) ev.stopPropagation();
-    unlockAudio();
+    window.unlockAudio();
     soundEnabled = !soundEnabled;
     updateAlarmButton();
     if (!soundEnabled) {
-      stopAlarm();
+      window.stopAlarm();
       showToast(lang === 'bn' ? 'অ্যালার্ম সাউন্ড মিউট করা হয়েছে' : 'Alarm sound muted');
     } else {
       playBeepPattern();
       showToast(lang === 'bn' ? 'অ্যালার্ম সাউন্ড চালু করা হয়েছে' : 'Alarm sound enabled');
     }
-  }
+  };
 
   function updateAlarmButton() {
     var btn = document.getElementById('alarm-toggle-btn');
@@ -907,7 +902,7 @@
     var hasBrandNew = false;
 
     for (var i = 0; i < orders.length; i++) {
-      var oid = orders[i].orderId || orders[i]._fbKey;
+      var oid = orders[i].orderId || orders[i].docId;
       if (oid) {
         currentIds.push(oid);
         if (!isFirstLoad && knownOrderIds.indexOf(oid) === -1 && orders[i].status === 'Pending') {
@@ -924,76 +919,29 @@
     }
   }
 
-  function saveOrders(changedOrder) {
+  async function syncOrderToFirestore(orderObj, fieldsToUpdate) {
+    if (!orderObj || !orderObj.docId) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-    } catch (e) {}
-
-    if (isFirebaseReady && ordersRef) {
-      if (changedOrder && changedOrder._fbKey) {
-        var copyObj = Object.assign({}, changedOrder);
-        var key = copyObj._fbKey;
-        delete copyObj._fbKey;
-        ordersRef.child(key).set(copyObj);
-      } else {
-        var mapObj = {};
-        for (var i = 0; i < orders.length; i++) {
-          var k = orders[i]._fbKey || orders[i].orderId || ('order_' + i);
-          var c = Object.assign({}, orders[i]);
-          delete c._fbKey;
-          mapObj[k] = c;
-        }
-        ordersRef.set(mapObj);
-      }
+      const ref = doc(db, ORDERS_COLLECTION, orderObj.docId);
+      await updateDoc(ref, fieldsToUpdate);
+    } catch (err) {
+      console.error("Firestore update error:", err);
+      showToast(t('toastSaveErr'));
     }
   }
 
-  function processIncomingOrdersData(rawData, showMsg) {
-    var parsedList = [];
-    if (Array.isArray(rawData)) {
-      for (var i = 0; i < rawData.length; i++) {
-        if (rawData[i]) {
-          var item = Object.assign({}, rawData[i]);
-          if (!item._fbKey) item._fbKey = item.orderId || ('idx_' + i);
-          parsedList.push(item);
-        }
-      }
-    } else if (rawData && typeof rawData === 'object') {
-      Object.keys(rawData).forEach(function(key) {
-        if (rawData[key]) {
-          var item = Object.assign({}, rawData[key]);
-          item._fbKey = key;
-          parsedList.push(item);
-        }
-      });
-    }
-
-    orders = parsedList;
-    detectNewOrders();
+  function renderAllUI() {
     applyHeaderText();
     renderStats();
     renderFilterRows();
     renderOrdersList();
-    if (showMsg) showToast(t('toastRefreshed'));
   }
 
-  function loadAndRender(showMsg, ev) {
+  window.manualRefresh = function(ev) {
     if (ev) ev.stopPropagation();
-
-    if (isFirebaseReady && ordersRef) {
-      ordersRef.once('value', function(snapshot) {
-        processIncomingOrdersData(snapshot.val(), showMsg);
-      });
-      return;
-    }
-
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      processIncomingOrdersData(raw ? JSON.parse(raw) : [], showMsg);
-    } catch (e) {
-      processIncomingOrdersData([], showMsg);
-    }
-  }
+    renderAllUI();
+    showToast(t('toastRefreshed'));
+  };
 
   function applyHeaderText() {
     document.getElementById('mgr-main-title').textContent = t('title');
@@ -1010,15 +958,12 @@
     updateAlarmButton();
   }
 
-  function toggleLang(ev) {
+  window.toggleLang = function(ev) {
     if (ev) ev.stopPropagation();
     lang = (lang === 'bn') ? 'en' : 'bn';
-    applyHeaderText();
-    renderStats();
-    renderFilterRows();
-    renderOrdersList();
+    renderAllUI();
     showToast(t('toastLang'));
-  }
+  };
 
   function renderStats() {
     var total = orders.length;
@@ -1073,17 +1018,17 @@
     document.getElementById('tech-filter-row').innerHTML = techHtml;
   }
 
-  function setStatusFilter(fKey) {
+  window.setStatusFilter = function(fKey) {
     activeStatusFilter = fKey;
     renderFilterRows();
     renderOrdersList();
-  }
+  };
 
-  function setTechFilter(tKey) {
+  window.setTechFilter = function(tKey) {
     activeTechFilter = tKey;
     renderFilterRows();
     renderOrdersList();
-  }
+  };
 
   function getItemTitle(item) {
     if (item.customLabel) return item.customLabel;
@@ -1101,7 +1046,7 @@
     return techId;
   }
 
-  function openBillEditor(orderIdx) {
+  window.openBillEditor = function(orderIdx) {
     if (!orders[orderIdx]) return;
     if (editingBillOrderIdx === orderIdx) {
       editingBillOrderIdx = null;
@@ -1128,7 +1073,7 @@
       draftBillItems.push({ label: '', qty: 1, price: 0 });
     }
     renderOrdersList();
-  }
+  };
 
   function syncDraftFromDom() {
     for (var i = 0; i < draftBillItems.length; i++) {
@@ -1141,7 +1086,7 @@
     }
   }
 
-  function updateDraftTotalPreview() {
+  window.updateDraftTotalPreview = function() {
     syncDraftFromDom();
     var sum = 0;
     for (var i = 0; i < draftBillItems.length; i++) {
@@ -1149,24 +1094,27 @@
     }
     var prevEl = document.getElementById('draft-total-val');
     if (prevEl) prevEl.textContent = formatMoney(sum);
-  }
+  };
 
-  function addDraftLine() {
+  window.addDraftLine = function() {
     syncDraftFromDom();
     draftBillItems.push({ label: '', qty: 1, price: 0 });
     renderOrdersList();
-  }
+  };
 
-  function removeDraftLine(lineIdx) {
+  window.removeDraftLine = function(lineIdx) {
     syncDraftFromDom();
     draftBillItems.splice(lineIdx, 1);
     if (draftBillItems.length === 0) {
       draftBillItems.push({ label: '', qty: 1, price: 0 });
     }
     renderOrdersList();
-  }
+  };
 
-  function submitCustomBill(orderIdx) {
+  window.submitCustomBill = async function(orderIdx) {
+    var currentOrder = orders[orderIdx];
+    if (!currentOrder) return;
+
     syncDraftFromDom();
     var validLines = [];
     var totalBill = 0;
@@ -1194,23 +1142,22 @@
       return;
     }
 
-    orders[orderIdx].billItems = validLines;
-    orders[orderIdx].items = validLines;
-    orders[orderIdx].total = totalBill;
-    orders[orderIdx].billSent = true;
-    orders[orderIdx].billUpdatedAt = new Date().toLocaleTimeString();
-
-    var updatedOrder = orders[orderIdx];
+    var billUpdatedAt = new Date().toLocaleTimeString();
     editingBillOrderIdx = null;
     draftBillItems = [];
 
-    saveOrders(updatedOrder);
-    renderStats();
-    renderOrdersList();
-    showToast(t('toastBillSaved') + updatedOrder.orderId);
-  }
+    await syncOrderToFirestore(currentOrder, {
+      billItems: validLines,
+      items: validLines,
+      total: totalBill,
+      billSent: true,
+      billUpdatedAt: billUpdatedAt
+    });
 
-  function renderOrdersList() {
+    showToast(t('toastBillSaved') + (currentOrder.orderId || currentOrder.docId));
+  };
+
+  window.renderOrdersList = function() {
     var q = (document.getElementById('search-input').value || '').trim().toLowerCase();
     var filtered = [];
 
@@ -1323,7 +1270,7 @@
         '<div class="order-card">' +
           '<div class="order-head">' +
             '<div>' +
-              '<div class="order-id">' + (o.orderId || '') + '</div>' +
+              '<div class="order-id">' + (o.orderId || o.docId || '') + '</div>' +
               '<small style="color:var(--text-muted); font-size:12px;">' + t('schedule') + ' ' + dStr + ' · ' + sStr + '</small>' +
             '</div>' +
             '<span class="' + badgeCls + '">' + (o.status || 'Pending') + '</span>' +
@@ -1361,80 +1308,81 @@
     }
 
     listEl.innerHTML = html;
-  }
+  };
 
-  function acceptOrder(idx) {
-    if (!orders[idx]) return;
+  window.acceptOrder = async function(idx) {
+    var currentOrder = orders[idx];
+    if (!currentOrder) return;
     var techSel = document.getElementById('tech-sel-' + idx);
-    var techVal = techSel ? techSel.value : (orders[idx].assignedTech || '');
-    if (techVal) {
-      orders[idx].assignedTech = techVal;
-      orders[idx].status = 'Assigned';
-    } else {
-      orders[idx].status = 'Accepted';
-    }
-    saveOrders(orders[idx]);
-    renderStats();
-    renderFilterRows();
-    renderOrdersList();
-    showToast(t('toastAccepted') + orders[idx].orderId);
-  }
+    var techVal = techSel ? techSel.value : (currentOrder.assignedTech || '');
+    var nextStatus = techVal ? 'Assigned' : 'Accepted';
 
-  function saveOrderChange(idx) {
-    if (!orders[idx]) return;
+    await syncOrderToFirestore(currentOrder, {
+      assignedTech: techVal,
+      status: nextStatus
+    });
+    showToast(t('toastAccepted') + (currentOrder.orderId || currentOrder.docId));
+  };
+
+  window.saveOrderChange = async function(idx) {
+    var currentOrder = orders[idx];
+    if (!currentOrder) return;
     var techVal = document.getElementById('tech-sel-' + idx).value;
     var stVal = document.getElementById('status-sel-' + idx).value;
+    var nextStatus = (techVal && stVal === 'Pending') ? 'Assigned' : stVal;
 
-    orders[idx].assignedTech = techVal;
-    if (techVal && stVal === 'Pending') {
-      orders[idx].status = 'Assigned';
-    } else {
-      orders[idx].status = stVal;
-    }
-
-    saveOrders(orders[idx]);
-    renderStats();
-    renderFilterRows();
-    renderOrdersList();
-    showToast(t('toastUpdated') + orders[idx].orderId);
-  }
-
-  function quickComplete(idx) {
-    if (!orders[idx]) return;
-    orders[idx].status = 'Completed';
-    saveOrders(orders[idx]);
-    renderStats();
-    renderFilterRows();
-    renderOrdersList();
-    showToast(t('toastCompleted') + orders[idx].orderId);
-  }
-
-  function quickCancel(idx) {
-    if (!orders[idx]) return;
-    orders[idx].status = 'Cancelled';
-    saveOrders(orders[idx]);
-    renderStats();
-    renderFilterRows();
-    renderOrdersList();
-    showToast(t('toastCancelled') + orders[idx].orderId);
-  }
-
-  // রিয়েল-টাইম Firebase Listener
-  if (isFirebaseReady && ordersRef) {
-    ordersRef.on('value', function(snapshot) {
-      processIncomingOrdersData(snapshot.val(), false);
+    await syncOrderToFirestore(currentOrder, {
+      assignedTech: techVal,
+      status: nextStatus
     });
-  } else {
-    window.addEventListener('storage', function(e) {
-      if (e.key === STORAGE_KEY) {
-        loadAndRender(false);
-      }
+    showToast(t('toastUpdated') + (currentOrder.orderId || currentOrder.docId));
+  };
+
+  window.quickComplete = async function(idx) {
+    var currentOrder = orders[idx];
+    if (!currentOrder) return;
+    await syncOrderToFirestore(currentOrder, { status: 'Completed' });
+    showToast(t('toastCompleted') + (currentOrder.orderId || currentOrder.docId));
+  };
+
+  window.quickCancel = async function(idx) {
+    var currentOrder = orders[idx];
+    if (!currentOrder) return;
+    await syncOrderToFirestore(currentOrder, { status: 'Cancelled' });
+    showToast(t('toastCancelled') + (currentOrder.orderId || currentOrder.docId));
+  };
+
+  // Real-time listener on Firestore 'orders' collection
+  const ordersQuery = query(collection(db, ORDERS_COLLECTION), orderBy("createdAt", "desc"));
+  onSnapshot(ordersQuery, (snapshot) => {
+    const fetched = [];
+    snapshot.forEach((docSnap) => {
+      fetched.push({
+        docId: docSnap.id,
+        ...docSnap.data()
+      });
     });
-    setInterval(function() {
-      loadAndRender(false);
-    }, 3000);
-    loadAndRender(false);
-  }
+    orders = fetched;
+    detectNewOrders();
+    renderAllUI();
+  }, (error) => {
+    // Fallback if some documents don't have createdAt field yet
+    console.warn("Ordered query fallback:", error);
+    onSnapshot(collection(db, ORDERS_COLLECTION), (snapshot) => {
+      const fetched = [];
+      snapshot.forEach((docSnap) => {
+        fetched.push({
+          docId: docSnap.id,
+          ...docSnap.data()
+        });
+      });
+      orders = fetched;
+      detectNewOrders();
+      renderAllUI();
+    });
+  });
+
+  renderAllUI();
 </script>
 </body>
 </html>
