@@ -2305,6 +2305,7 @@
   /* ======================================================
      STEP 3 : LOGIN & ROLES, CUSTOMERS, STOCK, REPORTS, SETTINGS
      ====================================================== */
+  var OWNER_EMAIL = 'foyezkhan1972@gmail.com';   /* একমাত্র মালিকের লগইন ইমেইল */
   var REQUIRE_LOGIN = true;   /* false = login বন্ধ (শুধু টেস্টের জন্য) */
   var ME = null, ROLE = REQUIRE_LOGIN ? '' : 'admin';
   var ALLOW = {
@@ -2332,7 +2333,9 @@
     else if (mode === 'denied') {
       h += '<div class="info-box" style="background:var(--red-light);border-color:#FFA39E;text-align:left">⛔ ' + esc(msg) + '</div>' +
         '<div class="note-s" style="text-align:left">' + L('অ্যাডমিনকে এই UID দিন: ', 'Give this UID to the admin: ') + '<b class="num" style="user-select:all;word-break:break-all">' + esc(uid || '') + '</b></div>' +
-        '<button class="btn btn-soft" style="width:100%;margin-top:14px" onclick="doLogout()">' + L('অন্য অ্যাকাউন্টে লগইন', 'Use another account') + '</button>';
+        '<div class="note-s" style="text-align:left;word-break:break-all">' + L('অ্যাপ যে ঠিকানায় খুঁজছে: ', 'App is looking at: ') + '<b class="num">' + esc(firebaseConfig.projectId) + ' → staff/' + esc(uid || '') + '</b></div>' +
+        '<button class="primary p-accept" style="margin-top:14px" onclick="recheckAuth()">🔄 ' + L('আবার যাচাই করুন', 'Check again') + '</button>' +
+        '<button class="btn btn-soft" style="width:100%;margin-top:10px" onclick="doLogout()">' + L('অন্য অ্যাকাউন্টে লগইন', 'Use another account') + '</button>';
     } else {
       h += '<input class="inp" id="lg-user" type="text" inputmode="text" autocomplete="username" placeholder="' + L('মোবাইল নম্বর (01XXXXXXXXX)', 'Mobile number (01XXXXXXXXX)') + '">' +
         '<input class="inp" id="lg-pass" type="password" autocomplete="current-password" placeholder="' + L('পাসওয়ার্ড', 'Password') + '" onkeydown="if(event.key===\'Enter\')doLogin()">' +
@@ -2386,13 +2389,14 @@
     var ids = ['dash', 'orders', 'techs', 'complaints', 'finance', 'more'];
     for (var i = 0; i < ids.length; i++) document.getElementById('nav-' + ids[i]).style.display = can(ids[i]) ? 'flex' : 'none';
   }
-  onAuthStateChanged(auth, async function (user) {
-    authSeen = true;
-    if (!REQUIRE_LOGIN) return;
+  window.recheckAuth = function () { handleUser(auth.currentUser); };
+  onAuthStateChanged(auth, function (u) { authSeen = true; if (REQUIRE_LOGIN) handleUser(u); });
+  async function handleUser(user) {
     if (!user) { ME = null; ROLE = ''; stopListeners(); closeSheetSafe(); showLogin('form'); return; }
     showLogin('loading');
     try {
-      var snap = await getDoc(doc(db, 'staff', user.uid)), s = snap.exists() ? snap.data() : null;
+      var isOwner = !!user.email && user.email.toLowerCase() === OWNER_EMAIL.toLowerCase();
+      var snap = isOwner ? null : await getDoc(doc(db, 'staff', user.uid)), s = isOwner ? { name: L('মালিক', 'Owner'), phone: '', role: 'admin', active: true } : (snap.exists() ? snap.data() : null);
       if (!s) return showLogin('denied', L('এই অ্যাকাউন্টটি এখনও অনুমোদিত নয়।', 'This account is not authorized yet.'), user.uid);
       if (s.active === false) return showLogin('denied', L('এই অ্যাকাউন্টটি নিষ্ক্রিয় করা হয়েছে।', 'This account is deactivated.'), user.uid);
       if (!ALLOW[s.role]) return showLogin('denied', L('ভূমিকা (role) সঠিক নয়।', 'Invalid role.'), user.uid);
@@ -2400,8 +2404,8 @@
       document.getElementById('login').style.display = 'none';
       moreSub = null; applyRoleNav(); startListeners();
       tab = 'dash'; window.switchTab('dash');
-    } catch (e) { console.error(e); showLogin('denied', L('তথ্য পড়া যায়নি — Firestore rules চেক করুন।', 'Could not read profile — check Firestore rules.'), user.uid); }
-  });
+    } catch (e) { console.error(e); showLogin('denied', L('তথ্য পড়া যায়নি — Firestore rules চেক করুন।', 'Could not read profile — check Firestore rules.') + ' [' + (e && e.code || e) + ']', user.uid); }
+  }
   function closeSheetSafe() { try { window.closeSheet(); window.closeDlg(); } catch (e) {} }
 
   /* ---- settings hooks ---- */
